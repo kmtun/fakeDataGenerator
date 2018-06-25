@@ -7,6 +7,7 @@ let userID = 1;
 let photoID = 1;
 let restID = 1;
 let reviewID = 1;
+const totalData = 1000;
 const photoURL = [
   'https://s3-media3.fl.yelpcdn.com/bphoto/LL_ibUp-R_2-iXkdO4V4-Q/o.jpg', 
   'https://s3-media1.fl.yelpcdn.com/bphoto/FBoLLCJsOE2lL-Mbcy9S9w/o.jpg',
@@ -71,21 +72,24 @@ const userReviews = [
 
 const generateUsers = () => {
   const name = faker.name.firstName() + ' ' + faker.name.lastName();
-  const counts = faker.fake("{{random.number(200)}},{{random.number(200)}},{{random.number(100)}}")
+  // const counts = faker.fake("{{random.number(200)}},{{random.number(200)}},{{random.number(100)}}")
+  const counts = `${Math.floor(Math.random() * 200)},${Math.floor(Math.random() * 200)},${Math.floor(Math.random() * 100)}`
   const image = faker.image.avatar();
   const location = faker.address.city();
-  return [userID++, name, counts, image, location];
+  return [name, counts, image, location];
 }
 
 const generatePhotos = () => {
   const src = photoURL[Math.floor(Math.random() * photoURL.length)];
-  const reviewID = Math.floor(Math.random() * 10000000);
-  const restaurantID = Math.floor(Math.random() * 10000000);
-  return [photoID++, src, reviewID, restaurantID];
+  let reviewID = Math.floor(Math.random() * totalData);
+  if(reviewID === 0) ++reviewID;
+  let restaurantID = Math.floor(Math.random() * totalData);
+  if(restaurantID === 0) ++restaurantID;
+  return [src, reviewID, restaurantID];
 }
 
 const generateRestaurants = () => {
-  return [restID++, faker.company.companyName()];
+  return [faker.company.companyName()];
 }
 
 const parseDate = (num, date) => {
@@ -107,12 +111,16 @@ const generateReviews = () => {
   date = parseDate(fakeDate.getMonth(), date);
   date = parseDate(fakeDate.getDay(), date);
   date += fakeDate.getFullYear().toString();
-  const counts = faker.fake("{{random.number(8)}},{{random.number(9)}},{{random.number(8)}}")
-  const ratings = faker.fake("{{random.number(5)}}");
-  const userID = Math.floor(Math.random() * 10000000);
-  const restaurantID = Math.floor(Math.random() * 10000000);
+  // const counts = faker.fake("{{random.number(8)}},{{random.number(9)}},{{random.number(8)}}")
+  const counts = `${Math.floor(Math.random() * 8)},${Math.floor(Math.random() * 9)},${Math.floor(Math.random() * 8)}`
+  let ratings = Math.floor(Math.random() * 5);
+  if(ratings === 0) ++ratings;
+  let userID = Math.floor(Math.random() * totalData);
+  if(userID === 0) ++userID;
+  let restaurantID = Math.floor(Math.random() * totalData);
+  if(restaurantID === 0) ++restaurantID;
   const description = userReviews[Math.floor(Math.random() * userReviews.length)];
-  return [reviewID++, date, counts, ratings, userID, restaurantID, description];
+  return [date, counts, ratings, userID, restaurantID, description];
 }
 
 const callWrite = (stream, func, timer, cb) => {
@@ -120,7 +128,7 @@ const callWrite = (stream, func, timer, cb) => {
 }
 
 const writeData = (writer, generator, time, callback) => {
-  let i = 10000000;
+  let i = totalData;
   console.time(time);
   function write() {
     let ok = true;
@@ -140,12 +148,18 @@ const writeData = (writer, generator, time, callback) => {
   write();
 }
 
-// const userWriter = fs.createWriteStream('data/users.txt', {encoding: 'utf8'});
+const userWriter = fs.createWriteStream('data/users.txt', {encoding: 'utf8'});
 const photoWriter = fs.createWriteStream('data/photos.txt', {encoding: 'utf8'});
 const restaurantWriter = fs.createWriteStream('data/restaurants.txt', {encoding: 'utf8'});
 const reviewWriter = fs.createWriteStream('data/reviews.txt', {encoding: 'utf8'});
 
 const promisifiedWrite = Promise.promisify(writeData);
+
+callWrite(userWriter, generateUsers, 'users', () => {
+  console.log('Users');
+  console.timeEnd('users');
+});
+
 callWrite(photoWriter, generatePhotos, 'photos', () => {
   console.log('Photos');
   console.timeEnd('photos');
