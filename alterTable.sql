@@ -30,3 +30,4 @@ create index on photos(restaurant_id);
 create index on photos(review_id);
 create index on reviews(restaurant_id);
 create index on reviews(user_id);
+create index on reviews(rating);
